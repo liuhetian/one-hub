@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/signal"
 	"sync/atomic"
+	"syscall"
 
 	"github.com/valyala/fasthttp"
 )
@@ -84,8 +86,18 @@ func main() {
 	fmt.Printf("💚 健康检查: http://localhost:%s/health\n", port)
 	fmt.Printf("📊 指标监控: http://localhost:%s/metrics\n", port)
 	fmt.Printf("⚡ 性能配置: 最大并发=%d, 缓冲区=%d字节\n", s.Concurrency, s.ReadBufferSize)
+	fmt.Println("📌 按 Ctrl+C 退出")
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-sigChan
+		fmt.Printf("\n🛑 收到退出信号，总请求数: %d\n", atomic.LoadUint64(&requestCount))
+		s.Shutdown()
+	}()
 
 	if err := s.ListenAndServe(addr); err != nil {
-		panic(err)
+		fmt.Printf("服务已停止: %v\n", err)
 	}
 }
