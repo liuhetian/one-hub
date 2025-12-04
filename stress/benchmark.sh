@@ -12,9 +12,9 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # 配置参数
-URL="${1:-http://localhost:8080/v1/chat/completions}"
-CONCURRENCY="${2:-100}"
-DURATION="${3:-10}"
+URL="${1:-http://127.0.0.1:8080/v1/chat/completions}"
+CONCURRENCY="${2:-200}"
+DURATION="${3:-30}"
 API_KEY="${4:-${API_KEY:-test-key}}"
 REQUESTS=$((CONCURRENCY * 1000))
 
@@ -160,7 +160,8 @@ if command -v hey &> /dev/null; then
     echo ""
 
     HEY_OUTPUT="${RESULT_DIR}/hey_${TIMESTAMP}.txt"
-    hey -z "${DURATION}s" -c "${CONCURRENCY}" \
+    # -z 默认最多 1M 请求，需指定更大的 -n 突破限制
+    hey -z "${DURATION}s" -n 100000000 -c "${CONCURRENCY}" \
         -cpus 10 \
         -t 0 \
         -disable-compression \
