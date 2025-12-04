@@ -11,6 +11,7 @@ data
 tmp/
 /test/
 .env
+benchmark_results/
 common/balancer/
 config.yaml
 dist
