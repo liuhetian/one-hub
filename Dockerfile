@@ -20,12 +20,12 @@ ENV GO111MODULE=on \
 
 WORKDIR /build
 ADD go.mod go.sum ./
-RUN go mod download
 COPY . .
 COPY --from=builder /build/build ./web/build
-RUN go build -ldflags "-s -w -X 'one-api/common.Version=$(cat VERSION)' -extldflags '-static'" -o one-api
+RUN go build -mod=vendor -ldflags "-s -w -X 'one-api/common.Version=$(cat VERSION)' -extldflags '-static'" -a -o one-api
+RUN cd stress && go build -mod=vendor -a -o openai-mock
 
-FROM alpine
+FROM docker.io/alpine:latest
 
 RUN apk update \
     && apk upgrade \
@@ -33,6 +33,7 @@ RUN apk update \
     && update-ca-certificates 2>/dev/null || true
 
 COPY --from=builder2 /build/one-api /
+COPY --from=builder2 /build/stress/openai-mock /
 EXPOSE 3000
 WORKDIR /data
 ENTRYPOINT ["/one-api"]

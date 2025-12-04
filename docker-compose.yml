@@ -11,6 +11,8 @@ services:
       - ./data:/data
     environment:
       - SQL_DSN=oneapi:123456@tcp(db:3306)/one-api # 修改此行，或注释掉以使用 SQLite 作为数据库
+      - SQL_MAX_IDLE_CONNS=100
+      - SQL_MAX_OPEN_CONNS=200
       - REDIS_CONN_STRING=redis://redis # redis
       - SESSION_SECRET=random_string # 修改为随机字符串
       - USER_TOKEN_SECRET=random_string # 修改为随机字符串,32位以上
@@ -18,6 +20,7 @@ services:
       - GLOBAL_API_RATE_LIMIT=99999999
       - MEMORY_CACHE_ENABLED=true
       - BATCH_UPDATE_ENABLED=true
+      - LOG_LEVEL=error
       # - HASHIDS_SALT=random_string # 可空，建议设置，字符串元素不能重复
     #      - NODE_TYPE=slave  # 多机部署时从节点取消注释该行
     #      - SYNC_FREQUENCY=60  # 需要定期从数据库加载数据时取消注释该行
@@ -55,3 +58,11 @@ services:
       MYSQL_USER: oneapi # 创建专用用户
       MYSQL_PASSWORD: "123456" # 设置专用用户密码
       MYSQL_DATABASE: one-api # 自动创建数据库
+
+  mock:
+    image: t4f.io/one-hub:latest
+    container_name: openai-mock
+    entrypoint: /openai-mock
+    restart: always
+    ports:
+      - "8080:8080"
