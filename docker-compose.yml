@@ -2,7 +2,7 @@ version: "3.4"
 
 services:
   one-hub:
-    image: martialbe/one-api:latest
+    image: t4f.io/one-hub:latest
     container_name: one-hub
     restart: always
     ports:
@@ -15,6 +15,9 @@ services:
       - SESSION_SECRET=random_string # 修改为随机字符串
       - USER_TOKEN_SECRET=random_string # 修改为随机字符串,32位以上
       - TZ=Asia/Shanghai
+      - GLOBAL_API_RATE_LIMIT=99999999
+      - MEMORY_CACHE_ENABLED=true
+      - BATCH_UPDATE_ENABLED=true
       # - HASHIDS_SALT=random_string # 可空，建议设置，字符串元素不能重复
     #      - NODE_TYPE=slave  # 多机部署时从节点取消注释该行
     #      - SYNC_FREQUENCY=60  # 需要定期从数据库加载数据时取消注释该行
@@ -33,12 +36,13 @@ services:
       retries: 3
 
   redis:
-    image: redis:latest
+    image: "${REGISTRY:-docker.io}/redis:latest"
     container_name: redis
     restart: always
 
   db:
-    image: mysql:8.2.0
+    image: "${REGISTRY:-docker.io}/mysql:8.2.0"
+    command: --max_connections=2000
     restart: always
     container_name: mysql
     volumes:

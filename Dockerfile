@@ -1,4 +1,4 @@
-FROM node:22.20 as builder
+FROM node:24.11 as builder
 
 WORKDIR /build
 
@@ -11,7 +11,8 @@ COPY ./web .
 COPY ./VERSION .
 RUN DISABLE_ESLINT_PLUGIN='true' VITE_APP_VERSION=$(cat VERSION) npm run build
 
-FROM golang:1.25.0 AS builder2
+FROM golang:1.25-alpine AS builder2
+RUN apk add --no-cache g++
 
 ENV GO111MODULE=on \
     CGO_ENABLED=1 \

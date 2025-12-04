@@ -1,0 +1,11 @@
+.git
+.idea
+.vscode
+*.db
+*.log
+benchmark_results/
+data/
+node_modules/
+stress/
+web/build/
+web/node_modules/
