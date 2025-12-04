@@ -13,8 +13,8 @@ NC='\033[0m' # No Color
 
 # 配置参数
 URL="${1:-http://localhost:8080/v1/chat/completions}"
-CONCURRENCY="${2:-200}"
-DURATION="${3:-30}"
+CONCURRENCY="${2:-100}"
+DURATION="${3:-10}"
 API_KEY="${4:-${API_KEY:-test-key}}"
 REQUESTS=$((CONCURRENCY * 1000))
 
@@ -103,17 +103,22 @@ RESULT_DIR="benchmark_results"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 mkdir -p "${RESULT_DIR}"
 
-# 测试计数
-TEST_NUM=3
-
 echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
 echo -e "${CYAN}                    开始性能测试${NC}"
 echo -e "${CYAN}═══════════════════════════════════════════════════════════${NC}"
 echo ""
 
+# 检查并提示文件句柄限制
+CURRENT_ULIMIT=$(ulimit -n 2>/dev/null || echo "256")
+if [ "${CURRENT_ULIMIT}" -lt 10000 ]; then
+    echo -e "${YELLOW}⚠ 文件句柄限制较低: ${CURRENT_ULIMIT}${NC}"
+    echo -e "${YELLOW}  建议执行: ulimit -n 65535${NC}"
+    echo ""
+fi
+
 # WRK 测试
 if command -v wrk &> /dev/null; then
-    echo -e "${BLUE}[${TEST_NUM}/4] 运行 wrk 压测...${NC}"
+    echo -e "${BLUE}[3/4] 运行 wrk 压测...${NC}"
     echo -e "${YELLOW}配置: ${DURATION}秒, ${CONCURRENCY}并发, 8线程${NC}"
     echo ""
 
@@ -144,18 +149,21 @@ EOF
     echo ""
     echo -e "${GREEN}✓ wrk 测试完成，结果已保存到: ${WRK_OUTPUT}${NC}"
     echo ""
-    TEST_NUM=$((TEST_NUM + 1))
-    sleep 2
+    echo -e "${YELLOW}等待 10 秒让端口释放...${NC}"
+    sleep 10
 fi
 
 # HEY 测试
 if command -v hey &> /dev/null; then
-    echo -e "${BLUE}[${TEST_NUM}/4] 运行 hey 压测...${NC}"
-    echo -e "${YELLOW}配置: ${REQUESTS}请求, ${CONCURRENCY}并发${NC}"
+    echo -e "${BLUE}[3/4] 运行 hey 压测...${NC}"
+    echo -e "${YELLOW}配置: ${DURATION}秒, ${CONCURRENCY}并发${NC}"
     echo ""
 
     HEY_OUTPUT="${RESULT_DIR}/hey_${TIMESTAMP}.txt"
-    hey -n "${REQUESTS}" -c "${CONCURRENCY}" \
+    hey -z "${DURATION}s" -c "${CONCURRENCY}" \
+        -cpus 10 \
+        -t 0 \
+        -disable-compression \
         -m POST \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer ${API_KEY}" \
@@ -165,29 +173,25 @@ if command -v hey &> /dev/null; then
     echo ""
     echo -e "${GREEN}✓ hey 测试完成，结果已保存到: ${HEY_OUTPUT}${NC}"
     echo ""
-    TEST_NUM=$((TEST_NUM + 1))
-    sleep 2
 fi
 
 # AB 测试
 if command -v ab &> /dev/null; then
-    echo -e "${BLUE}[${TEST_NUM}/4] 运行 ab 压测...${NC}"
+    echo -e "${BLUE}[3/4] 运行 ab 压测...${NC}"
 
     # macOS 上端口耗尽问题：等待 TIME_WAIT 连接释放
     echo -e "${YELLOW}等待 15 秒让端口释放（避免 macOS 端口耗尽）...${NC}"
     sleep 15
 
-    # ab 使用较低并发避免端口耗尽，请求数也相应减少
-    AB_CONCURRENCY=$((CONCURRENCY / 2))
-    AB_REQUESTS=$((REQUESTS / 4))
-    echo -e "${YELLOW}配置: ${AB_REQUESTS}请求, ${AB_CONCURRENCY}并发, Keep-Alive${NC}"
+    echo -e "${YELLOW}配置: ${DURATION}秒, ${CONCURRENCY}并发, Keep-Alive${NC}"
     echo ""
 
     # ab 在 macOS 上对 localhost 有兼容性问题，需要替换为 127.0.0.1
     AB_URL="${URL//localhost/127.0.0.1}"
 
     AB_OUTPUT="${RESULT_DIR}/ab_${TIMESTAMP}.txt"
-    ab -n "${AB_REQUESTS}" -c "${AB_CONCURRENCY}" -k \
+    # -t 隐含 -n 50000，需要指定更大的 -n 确保测试运行完整时长
+    ab -t "${DURATION}" -n 10000000 -c "${CONCURRENCY}" -k \
         -p "${REQUEST_FILE}" \
         -T "application/json" \
         -H "Authorization: Bearer ${API_KEY}" \
@@ -278,11 +282,12 @@ SUMMARY_FILE="${RESULT_DIR}/summary_${TIMESTAMP}.txt"
         HEY_AVG=$(grep "Average:" "${HEY_OUTPUT}" | awk '{print $2, $3}')
         HEY_FASTEST=$(grep "Fastest:" "${HEY_OUTPUT}" | awk '{print $2, $3}')
         HEY_SLOWEST=$(grep "Slowest:" "${HEY_OUTPUT}" | awk '{print $2, $3}')
+        HEY_TOTAL_REQS=$(grep -A 10 "Status code distribution:" "${HEY_OUTPUT}" | grep -E "^\s*\[" | awk '{sum+=$2} END {print sum}')
 
         echo "  吞吐量指标:"
         echo "    ├─ QPS:           ${HEY_QPS} req/s"
         echo "    ├─ 总耗时:         ${HEY_TOTAL_TIME}"
-        echo "    └─ 总请求数:       ${REQUESTS}"
+        echo "    └─ 总请求数:       ${HEY_TOTAL_REQS}"
         echo ""
 
         echo "  延迟统计:"
@@ -381,8 +386,8 @@ SUMMARY_FILE="${RESULT_DIR}/summary_${TIMESTAMP}.txt"
         HEY_AVG_NUM=$(grep "Average:" "${HEY_OUTPUT}" | awk '{printf "%.4fs", $2}')
         HEY_P99=$(grep "99%" "${HEY_OUTPUT}" | grep -oE "[0-9]+\.[0-9]+" | awk '{printf "%.4fs", $1}')
         HEY_200=$(grep -A 10 "Status code distribution:" "${HEY_OUTPUT}" | grep -E "^\s*\[200\]" | awk '{print $2}')
-        HEY_TOTAL_NUM=${REQUESTS}
-        if [ -n "${HEY_200}" ]; then
+        HEY_TOTAL_NUM=$(grep -A 10 "Status code distribution:" "${HEY_OUTPUT}" | grep -E "^\s*\[" | awk '{sum+=$2} END {print sum}')
+        if [ -n "${HEY_200}" ] && [ -n "${HEY_TOTAL_NUM}" ] && [ "${HEY_TOTAL_NUM}" != "0" ]; then
             HEY_ERR_NUM=$((HEY_TOTAL_NUM - HEY_200))
             HEY_ERR_RATE=$(echo "scale=2; ${HEY_ERR_NUM} * 100 / ${HEY_TOTAL_NUM}" | bc)%
         else
