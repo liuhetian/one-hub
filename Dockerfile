@@ -12,7 +12,8 @@ COPY ./VERSION .
 RUN DISABLE_ESLINT_PLUGIN='true' VITE_APP_VERSION=$(cat VERSION) npm run build
 
 FROM golang:1.25-alpine AS builder2
-RUN apk add --no-cache g++
+RUN sed -i "s@https://dl-cdn.alpinelinux.org/@https://mirrors.aliyun.com/@g" /etc/apk/repositories \
+    && apk add --no-cache g++
 
 ENV GO111MODULE=on \
     CGO_ENABLED=1 \
