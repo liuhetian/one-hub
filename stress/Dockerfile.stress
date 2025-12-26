@@ -1,0 +1,13 @@
+FROM docker.io/alpine:latest
+
+RUN sed -i "s@https://dl-cdn.alpinelinux.org/@https://mirrors.aliyun.com/@g" /etc/apk/repositories
+
+RUN apk update \
+    && apk upgrade \
+    && apk add --no-cache ca-certificates tzdata \
+    && update-ca-certificates 2>/dev/null || true
+RUN apk add --no-cache apache2-utils wrk hey curl
+
+COPY benchmark.sh /data/benchmark.sh
+WORKDIR /data
+CMD ["/data/benchmark.sh"]

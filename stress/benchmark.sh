@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # HTTP性能压测脚本
 # 使用方法: ./benchmark.sh [URL] [并发数] [持续时间] [API_KEY]
@@ -11,11 +11,11 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-# 配置参数
-URL="${1:-http://127.0.0.1:8080/v1/chat/completions}"
-CONCURRENCY="${2:-200}"
-DURATION="${3:-30}"
-API_KEY="${4:-${API_KEY:-test-key}}"
+# 配置参数（优先使用环境变量，其次命令行参数，最后使用默认值）
+URL="${URL:-${1:-https://one-hub.a3games.com/v1/chat/completions}}"
+CONCURRENCY="${CONCURRENCY:-${2:-100}}"
+DURATION="${DURATION:-${3:-10}}"
+API_KEY="${API_KEY:-${4:-sk-Z0MdU0NAXCmiwYF_wFTTMr8YubchGkYZs58d2XgYSlZOfpr_XD8czm1omSI}}"
 REQUESTS=$((CONCURRENCY * 1000))
 
 # 请求数据
@@ -254,9 +254,10 @@ SUMMARY_FILE="${RESULT_DIR}/summary_${TIMESTAMP}.txt"
         # 提取百分位延迟
         echo "  延迟分布 (百分位):"
         grep -A 4 "Latency Distribution" "${WRK_OUTPUT}" | tail -4 | while read -r line; do
-            if [[ $line =~ ^[[:space:]]*([0-9]+)%[[:space:]]+([0-9.]+[a-z]+) ]]; then
-                pct="${BASH_REMATCH[1]}"
-                val="${BASH_REMATCH[2]}"
+            # 使用 sed 提取百分位和值
+            pct=$(echo "$line" | sed -n 's/^[[:space:]]*\([0-9]\+\)%[[:space:]]\+\([0-9.]\+[a-z]\+\)/\1/p')
+            val=$(echo "$line" | sed -n 's/^[[:space:]]*\([0-9]\+\)%[[:space:]]\+\([0-9.]\+[a-z]\+\)/\2/p')
+            if [ -n "$pct" ] && [ -n "$val" ]; then
                 echo "    ├─ P${pct}:            ${val}"
             fi
         done | sed '$ s/├/└/'
@@ -300,9 +301,10 @@ SUMMARY_FILE="${RESULT_DIR}/summary_${TIMESTAMP}.txt"
         # 提取百分位延迟
         echo "  延迟分布 (百分位):"
         grep -A 7 "Latency distribution:" "${HEY_OUTPUT}" | tail -7 | while read -r line; do
-            if [[ $line =~ ([0-9]+)%[[:space:]]+in[[:space:]]+([0-9.]+)[[:space:]]+secs ]]; then
-                pct="${BASH_REMATCH[1]}"
-                val="${BASH_REMATCH[2]}"
+            # 使用 sed 提取百分位和值
+            pct=$(echo "$line" | sed -n 's/.*\([0-9]\+\)%[[:space:]]\+in[[:space:]]\+\([0-9.]\+\)[[:space:]]\+secs.*/\1/p')
+            val=$(echo "$line" | sed -n 's/.*\([0-9]\+\)%[[:space:]]\+in[[:space:]]\+\([0-9.]\+\)[[:space:]]\+secs.*/\2/p')
+            if [ -n "$pct" ] && [ -n "$val" ]; then
                 echo "    ├─ P${pct}:            ${val}s"
             fi
         done | sed '$ s/├/└/'
@@ -350,9 +352,10 @@ SUMMARY_FILE="${RESULT_DIR}/summary_${TIMESTAMP}.txt"
         # 提取百分位延迟
         echo "  延迟分布 (百分位):"
         grep -A 9 "Percentage of the requests served" "${AB_OUTPUT}" | tail -8 | while read -r line; do
-            if [[ $line =~ ^[[:space:]]*([0-9]+)%[[:space:]]+([0-9]+) ]]; then
-                pct="${BASH_REMATCH[1]}"
-                val="${BASH_REMATCH[2]}"
+            # 使用 sed 提取百分位和值
+            pct=$(echo "$line" | sed -n 's/^[[:space:]]*\([0-9]\+\)%[[:space:]]\+\([0-9]\+\)/\1/p')
+            val=$(echo "$line" | sed -n 's/^[[:space:]]*\([0-9]\+\)%[[:space:]]\+\([0-9]\+\)/\2/p')
+            if [ -n "$pct" ] && [ -n "$val" ]; then
                 echo "    ├─ P${pct}:            ${val}ms"
             fi
         done | sed '$ s/├/└/'
