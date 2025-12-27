@@ -369,6 +369,7 @@
   "jump": "正在跳轉中...",
   "invoice": "月度賬單",
   "multi_user_stats": "多用戶令牌統計",
+  "billing_tag_stats": "計費分組統計",
   "midjourney": "Midjourney",
   "invoice_index": {
     "invoice": "月度賬單",

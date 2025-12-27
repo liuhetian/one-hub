@@ -27,6 +27,7 @@ const ModelInfo = Loadable(lazy(() => import('views/ModelInfo')));
 const Invoice = Loadable(lazy(() => import('views/Invoice')));
 const InvoiceDetail = Loadable(lazy(() => import('views/Invoice/detail')));
 const MultiUserStats = Loadable(lazy(() => import('views/MultiUserStats')));
+const BillingTagStats = Loadable(lazy(() => import('views/BillingTagStats')));
 // dashboard routing
 const Dashboard = Loadable(lazy(() => import('views/Dashboard')));
 
@@ -57,6 +58,10 @@ const MainRoutes = {
     {
       path: 'multi_user_stats',
       element: <MultiUserStats />
+    },
+    {
+      path: 'billing_tag_stats',
+      element: <BillingTagStats />
     },
     {
       path: 'channel',

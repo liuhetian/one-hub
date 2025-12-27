@@ -41,6 +41,15 @@ const dashboard = {
       isAdmin: true
     },
     {
+      id: 'billing_tag_stats',
+      title: 'billing_tag_stats',
+      type: 'item',
+      url: '/panel/billing_tag_stats',
+      icon: icons.IconChartHistogram,
+      breadcrumbs: false,
+      isAdmin: true
+    },
+    {
       id: 'playground',
       title: 'playground',
       type: 'item',
