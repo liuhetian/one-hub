@@ -117,6 +117,23 @@ func CacheDecreaseUserQuota(id int, quota int) error {
 	return err
 }
 
+// CacheIncreaseUserQuota 使用Redis原子操作增加用户余额缓存
+func CacheIncreaseUserQuota(id int, quota int) error {
+	if !config.RedisEnabled {
+		return nil
+	}
+	err := redis.RedisIncrease(fmt.Sprintf(UserQuotaCacheKey, id), int64(quota))
+	return err
+}
+
+// CacheDeleteUserQuota 删除用户余额缓存（用于管理后台手动修改余额时）
+func CacheDeleteUserQuota(id int) error {
+	if !config.RedisEnabled {
+		return nil
+	}
+	return redis.RedisDel(fmt.Sprintf(UserQuotaCacheKey, id))
+}
+
 func CacheIsUserEnabled(userId int) (bool, error) {
 	if !config.RedisEnabled {
 		return IsUserEnabled(userId)

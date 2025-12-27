@@ -325,7 +325,7 @@ func PreConsumeTokenQuota(tokenId int, quota int) (err error) {
 	if !token.UnlimitedQuota && token.RemainQuota < quota {
 		return errors.New("令牌额度不足")
 	}
-	userQuota, err := GetUserQuota(token.UserId)
+	userQuota, err := CacheGetUserQuota(token.UserId)
 	if err != nil {
 		return err
 	}

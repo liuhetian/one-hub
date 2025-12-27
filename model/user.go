@@ -438,6 +438,10 @@ func IncreaseUserQuota(id int, quota int) (err error) {
 	if quota < 0 {
 		return errors.New("quota 不能为负数！")
 	}
+	// 同步更新Redis缓存（原子操作INCRBY）
+	if config.RedisEnabled {
+		_ = CacheIncreaseUserQuota(id, quota)
+	}
 	if config.BatchUpdateEnabled {
 		addNewRecord(BatchUpdateTypeUserQuota, id, quota)
 		return nil
@@ -453,6 +457,10 @@ func increaseUserQuota(id int, quota int) (err error) {
 func DecreaseUserQuota(id int, quota int) (err error) {
 	if quota < 0 {
 		return errors.New("quota 不能为负数！")
+	}
+	// 同步更新Redis缓存（原子操作DECRBY）
+	if config.RedisEnabled {
+		_ = CacheDecreaseUserQuota(id, quota)
 	}
 	if config.BatchUpdateEnabled {
 		addNewRecord(BatchUpdateTypeUserQuota, id, -quota)
