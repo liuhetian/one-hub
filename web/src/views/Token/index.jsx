@@ -113,9 +113,9 @@ export default function Token() {
     }
   }, [userIsRoot, fetchUsers]);
 
-  // 用户搜索
+  // 用户搜索（包括清空搜索时重新加载用户列表）
   useEffect(() => {
-    if (userIsRoot && userSearchKeyword) {
+    if (userIsRoot) {
       const timer = setTimeout(() => {
         fetchUsers(userSearchKeyword);
       }, 300);
