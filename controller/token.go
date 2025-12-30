@@ -312,3 +312,177 @@ func validateTokenSetting(setting *model.TokenSetting) error {
 
 	return nil
 }
+
+// ==================== 超级管理员专用接口 ====================
+
+// GetTokensListForAdmin 超级管理员获取指定用户的token列表
+func GetTokensListForAdmin(c *gin.Context) {
+	targetUserId, err := strconv.Atoi(c.Query("user_id"))
+	if err != nil || targetUserId == 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "user_id 参数无效",
+		})
+		return
+	}
+
+	var params model.GenericParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		common.APIRespondWithError(c, http.StatusOK, err)
+		return
+	}
+
+	tokens, err := model.GetTokensListForAdmin(targetUserId, &params)
+	if err != nil {
+		common.APIRespondWithError(c, http.StatusOK, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "",
+		"data":    tokens,
+	})
+}
+
+// GetTokenForAdmin 超级管理员获取指定token详情
+func GetTokenForAdmin(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+	token, err := model.GetTokenByIdForAdmin(id)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "",
+		"data":    token,
+	})
+}
+
+// DeleteTokenForAdmin 超级管理员删除指定token
+func DeleteTokenForAdmin(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	err := model.DeleteTokenByIdForAdmin(id)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "",
+	})
+}
+
+// UpdateTokenForAdmin 超级管理员更新指定token
+func UpdateTokenForAdmin(c *gin.Context) {
+	statusOnly := c.Query("status_only")
+	token := model.Token{}
+	err := c.ShouldBindJSON(&token)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+	if len(token.Name) > 30 {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "令牌名称过长",
+		})
+		return
+	}
+
+	setting := token.Setting.Data()
+	err = validateTokenSetting(&setting)
+	if err != nil {
+		common.APIRespondWithError(c, http.StatusOK, err)
+		return
+	}
+
+	cleanToken, err := model.GetTokenByIdForAdmin(token.Id)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	if token.Status == config.TokenStatusEnabled {
+		if cleanToken.Status == config.TokenStatusExpired && cleanToken.ExpiredTime <= utils.GetTimestamp() && cleanToken.ExpiredTime != -1 {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "令牌已过期，无法启用，请先修改令牌过期时间，或者设置为永不过期",
+			})
+			return
+		}
+		if cleanToken.Status == config.TokenStatusExhausted && cleanToken.RemainQuota <= 0 && !cleanToken.UnlimitedQuota {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "令牌可用额度已用尽，无法启用，请先修改令牌剩余额度，或者设置为无限额度",
+			})
+			return
+		}
+	}
+
+	// 管理员操作时使用token所属用户的userId进行分组校验
+	if cleanToken.Group != token.Group && token.Group != "" {
+		err = validateTokenGroup(token.Group, cleanToken.UserId)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": err.Error(),
+			})
+			return
+		}
+	}
+	if cleanToken.BackupGroup != token.BackupGroup && token.BackupGroup != "" {
+		err = validateTokenGroup(token.BackupGroup, cleanToken.UserId)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": err.Error(),
+			})
+			return
+		}
+	}
+
+	if statusOnly != "" {
+		cleanToken.Status = token.Status
+	} else {
+		cleanToken.Name = token.Name
+		cleanToken.ExpiredTime = token.ExpiredTime
+		cleanToken.RemainQuota = token.RemainQuota
+		cleanToken.UnlimitedQuota = token.UnlimitedQuota
+		cleanToken.Group = token.Group
+		cleanToken.BackupGroup = token.BackupGroup
+		cleanToken.Setting = token.Setting
+	}
+	err = cleanToken.Update()
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "",
+		"data":    cleanToken,
+	})
+}

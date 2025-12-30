@@ -99,6 +99,47 @@ func GetUserTokensList(userId int, params *GenericParams) (*DataResult[Token], e
 	return PaginateAndOrder(db, &params.PaginationParams, &tokens, allowedTokenOrderFields)
 }
 
+// GetTokensListForAdmin 管理员获取指定用户的token列表（仅超级管理员可用）
+func GetTokensListForAdmin(userId int, params *GenericParams) (*DataResult[Token], error) {
+	var tokens []*Token
+	db := DB.Where("user_id = ?", userId)
+
+	if params.Keyword != "" {
+		db = db.Where("name LIKE ?", params.Keyword+"%")
+	}
+
+	return PaginateAndOrder(db, &params.PaginationParams, &tokens, allowedTokenOrderFields)
+}
+
+// GetTokenByIdForAdmin 管理员获取指定token（仅超级管理员可用，不受userId限制）
+func GetTokenByIdForAdmin(id int) (*Token, error) {
+	if id == 0 {
+		return nil, errors.New("id 为空！")
+	}
+	var token Token
+	err := DB.First(&token, "id = ?", id).Error
+	return &token, err
+}
+
+// DeleteTokenByIdForAdmin 管理员删除指定token（仅超级管理员可用，不受userId限制）
+func DeleteTokenByIdForAdmin(id int) (err error) {
+	if id == 0 {
+		return errors.New("id 为空！")
+	}
+	var token Token
+	err = DB.First(&token, "id = ?", id).Error
+	if err != nil {
+		return err
+	}
+	err = token.Delete()
+
+	if err == nil && config.RedisEnabled {
+		redis.RedisDel(fmt.Sprintf(UserTokensKey, token.Key))
+	}
+
+	return err
+}
+
 func GetTokenModel(key string) (token *Token, err error) {
 	if key == "" {
 		return nil, ErrTokenInvalid

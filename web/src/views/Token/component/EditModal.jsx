@@ -85,12 +85,15 @@ const originInputs = {
   }
 };
 
-const EditModal = ({ open, tokenId, onCancel, onOk, userGroupOptions }) => {
+const EditModal = ({ open, tokenId, onCancel, onOk, userGroupOptions, isAdminMode = false }) => {
   const { t } = useTranslation();
   const theme = useTheme();
   const [inputs, setInputs] = useState(originInputs);
   const [modelOptions, setModelOptions] = useState([]);
   const [ownedByIcons, setOwnedByIcons] = useState({});
+
+  // 根据是否是管理员模式决定使用的API路径
+  const apiBasePath = isAdminMode ? '/api/token/admin' : '/api/token';
   const fetchOwnedByIcons = async () => {
     try {
       const res = await API.get('/api/model_ownedby/');
@@ -142,9 +145,9 @@ const EditModal = ({ open, tokenId, onCancel, onOk, userGroupOptions }) => {
     let res;
     try {
       if (values.is_edit) {
-        res = await API.put(`/api/token/`, { ...values, id: parseInt(tokenId) });
+        res = await API.put(`${apiBasePath}/`, { ...values, id: parseInt(tokenId) });
       } else {
-        res = await API.post(`/api/token/`, values);
+        res = await API.post(`${apiBasePath}/`, values);
       }
       const { success, message } = res.data;
       if (success) {
@@ -167,7 +170,7 @@ const EditModal = ({ open, tokenId, onCancel, onOk, userGroupOptions }) => {
 
   const loadToken = async () => {
     try {
-      let res = await API.get(`/api/token/${tokenId}`);
+      let res = await API.get(`${apiBasePath}/${tokenId}`);
       const { success, message, data } = res.data;
       if (success) {
         data.is_edit = true;
@@ -497,5 +500,6 @@ EditModal.propTypes = {
   tokenId: PropTypes.number,
   onCancel: PropTypes.func,
   onOk: PropTypes.func,
-  userGroupOptions: PropTypes.array
+  userGroupOptions: PropTypes.array,
+  isAdminMode: PropTypes.bool
 };

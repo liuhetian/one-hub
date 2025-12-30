@@ -1,5 +1,5 @@
-import { useState, useEffect, useContext } from 'react';
-import { showError, showSuccess, trims, copy } from 'utils/common';
+import { useState, useEffect, useContext, useCallback } from 'react';
+import { showError, showSuccess, trims, copy, useIsRoot } from 'utils/common';
 
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -10,6 +10,9 @@ import LinearProgress from '@mui/material/LinearProgress';
 import Alert from '@mui/material/Alert';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import Toolbar from '@mui/material/Toolbar';
+import Autocomplete from '@mui/material/Autocomplete';
+import TextField from '@mui/material/TextField';
+import Chip from '@mui/material/Chip';
 
 import { Button, Card, Box, Stack, Container, Typography } from '@mui/material';
 import TokensTableRow from './component/TableRow';
@@ -42,6 +45,13 @@ export default function Token() {
   const siteInfo = useSelector((state) => state.siteInfo);
   const { userGroup } = useSelector((state) => state.account);
 
+  // 超级管理员查看其他用户token的功能
+  const userIsRoot = useIsRoot();
+  const [userOptions, setUserOptions] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [userSearchKeyword, setUserSearchKeyword] = useState('');
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
   const handleSort = (event, id) => {
     const isAsc = orderBy === id && order === 'asc';
     if (id !== '') {
@@ -68,6 +78,50 @@ export default function Token() {
     setSearchKeyword(formData.get('keyword'));
   };
 
+  // 获取用户列表（仅超级管理员可用）
+  const fetchUsers = useCallback(async (keyword) => {
+    if (!userIsRoot) return;
+    setLoadingUsers(true);
+    try {
+      const res = await API.get('/api/user/', {
+        params: {
+          page: 1,
+          size: 20,
+          keyword: keyword || ''
+        }
+      });
+      const { success, data } = res.data;
+      if (success && data.data) {
+        const options = data.data.map((user) => ({
+          id: user.id,
+          username: user.username,
+          display_name: user.display_name || user.username
+        }));
+        setUserOptions(options);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+    setLoadingUsers(false);
+  }, [userIsRoot]);
+
+  // 初始加载用户列表
+  useEffect(() => {
+    if (userIsRoot) {
+      fetchUsers('');
+    }
+  }, [userIsRoot, fetchUsers]);
+
+  // 用户搜索
+  useEffect(() => {
+    if (userIsRoot && userSearchKeyword) {
+      const timer = setTimeout(() => {
+        fetchUsers(userSearchKeyword);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [userSearchKeyword, userIsRoot, fetchUsers]);
+
   const fetchData = async (page, rowsPerPage, keyword, order, orderBy) => {
     setSearching(true);
     keyword = trims(keyword);
@@ -75,14 +129,30 @@ export default function Token() {
       if (orderBy) {
         orderBy = order === 'desc' ? '-' + orderBy : orderBy;
       }
-      const res = await API.get(`/api/token/`, {
-        params: {
-          page: page + 1,
-          size: rowsPerPage,
-          keyword: keyword,
-          order: orderBy
-        }
-      });
+
+      // 如果是超级管理员且选择了用户，使用管理员接口
+      let res;
+      if (userIsRoot && selectedUser) {
+        res = await API.get('/api/token/admin/', {
+          params: {
+            page: page + 1,
+            size: rowsPerPage,
+            keyword: keyword,
+            order: orderBy,
+            user_id: selectedUser.id
+          }
+        });
+      } else {
+        res = await API.get('/api/token/', {
+          params: {
+            page: page + 1,
+            size: rowsPerPage,
+            keyword: keyword,
+            order: orderBy
+          }
+        });
+      }
+
       const { success, message, data } = res.data;
       if (success) {
         setListCount(data.total_count);
@@ -105,7 +175,7 @@ export default function Token() {
 
   useEffect(() => {
     fetchData(page, rowsPerPage, searchKeyword, order, orderBy);
-  }, [page, rowsPerPage, searchKeyword, order, orderBy, refreshFlag]);
+  }, [page, rowsPerPage, searchKeyword, order, orderBy, refreshFlag, selectedUser]);
 
   useEffect(() => {
     loadUserGroup();
@@ -120,7 +190,9 @@ export default function Token() {
   }, [userGroup]);
 
   const manageToken = async (id, action, value) => {
-    const url = '/api/token/';
+    // 根据是否是超级管理员查看他人token来决定使用哪个接口
+    const isAdminMode = userIsRoot && selectedUser;
+    const url = isAdminMode ? '/api/token/admin/' : '/api/token/';
     let data = { id };
     let res;
     try {
@@ -215,6 +287,59 @@ export default function Token() {
         </Alert>
       </Stack>
       <Card>
+        {/* 超级管理员用户选择器 */}
+        {userIsRoot && (
+          <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Typography variant="subtitle2" color="text.secondary" sx={{ minWidth: 100 }}>
+                {t('token_index.selectUser') || '选择用户'}:
+              </Typography>
+              <Autocomplete
+                sx={{ minWidth: 300 }}
+                size="small"
+                options={userOptions}
+                loading={loadingUsers}
+                value={selectedUser}
+                onChange={(event, newValue) => {
+                  setSelectedUser(newValue);
+                  setPage(0);
+                }}
+                onInputChange={(event, newInputValue) => {
+                  setUserSearchKeyword(newInputValue);
+                }}
+                getOptionLabel={(option) => `${option.display_name} (ID: ${option.id})`}
+                isOptionEqualToValue={(option, value) => option.id === value?.id}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder={t('token_index.searchUserPlaceholder') || '搜索用户名或ID...'}
+                    variant="outlined"
+                  />
+                )}
+                renderOption={(props, option) => (
+                  <li {...props} key={option.id}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <span>{option.display_name}</span>
+                      <Chip label={`ID: ${option.id}`} size="small" variant="outlined" />
+                      {option.username !== option.display_name && (
+                        <Chip label={option.username} size="small" color="default" />
+                      )}
+                    </Stack>
+                  </li>
+                )}
+                noOptionsText={t('token_index.noUserFound') || '未找到用户'}
+                loadingText={t('token_index.loadingUsers') || '加载中...'}
+              />
+              {selectedUser && (
+                <Chip
+                  label={t('token_index.viewingUserTokens') || `正在查看用户 ${selectedUser.display_name} 的令牌`}
+                  color="warning"
+                  onDelete={() => setSelectedUser(null)}
+                />
+              )}
+            </Stack>
+          </Box>
+        )}
         <Box component="form" onSubmit={searchTokens} noValidate>
           <TableToolBar placeholder={t('token_index.searchTokenName')} />
         </Box>
@@ -287,6 +412,7 @@ export default function Token() {
         onOk={handleOkModal}
         tokenId={editTokenId}
         userGroupOptions={userGroupOptions}
+        isAdminMode={userIsRoot && selectedUser !== null}
       />
     </>
   );

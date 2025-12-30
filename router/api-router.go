@@ -194,6 +194,15 @@ func SetApiRouter(router *gin.Engine) {
 			tokenRoute.PUT("/", controller.UpdateToken)
 			tokenRoute.DELETE("/:id", controller.DeleteToken)
 		}
+		// 超级管理员专用token管理接口
+		tokenAdminRoute := apiRouter.Group("/token/admin")
+		tokenAdminRoute.Use(middleware.RootAuth())
+		{
+			tokenAdminRoute.GET("/", controller.GetTokensListForAdmin)
+			tokenAdminRoute.GET("/:id", controller.GetTokenForAdmin)
+			tokenAdminRoute.PUT("/", controller.UpdateTokenForAdmin)
+			tokenAdminRoute.DELETE("/:id", controller.DeleteTokenForAdmin)
+		}
 		redemptionRoute := apiRouter.Group("/redemption")
 		redemptionRoute.Use(middleware.AdminAuth())
 		{
