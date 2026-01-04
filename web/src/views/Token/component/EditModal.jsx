@@ -30,7 +30,7 @@ import {
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { renderQuotaWithPrompt, showSuccess, showError, useIsAdmin } from 'utils/common';
+import { renderQuotaWithPrompt, showSuccess, showError, useIsReliable } from 'utils/common';
 import { API } from 'utils/api';
 import { useTranslation } from 'react-i18next';
 import 'dayjs/locale/zh-cn';
@@ -85,10 +85,10 @@ const originInputs = {
   }
 };
 
-const EditModal = ({ open, tokenId, onCancel, onOk, userGroupOptions }) => {
+const EditModal = ({ open, tokenId, onCancel, onOk, userGroupOptions, adminMode = false }) => {
   const { t } = useTranslation();
   const theme = useTheme();
-  const userIsAdmin = useIsAdmin();
+  const userIsReliable = useIsReliable();
   const [inputs, setInputs] = useState(originInputs);
   const [modelOptions, setModelOptions] = useState([]);
   const [ownedByIcons, setOwnedByIcons] = useState({});
@@ -143,7 +143,14 @@ const EditModal = ({ open, tokenId, onCancel, onOk, userGroupOptions }) => {
     let res;
     try {
       if (values.is_edit) {
-        res = await API.put(`/api/token/`, { ...values, id: parseInt(tokenId) });
+        // 管理员模式使用管理员专用接口
+        const apiPath = adminMode ? `/api/token/admin` : `/api/token/`;
+        const payload = { ...values, id: parseInt(tokenId) };
+        // 管理员模式下传递 user_id
+        if (adminMode && values.user_id) {
+          payload.user_id = parseInt(values.user_id);
+        }
+        res = await API.put(apiPath, payload);
       } else {
         res = await API.post(`/api/token/`, values);
       }
@@ -168,18 +175,32 @@ const EditModal = ({ open, tokenId, onCancel, onOk, userGroupOptions }) => {
 
   const loadToken = async () => {
     try {
-      let res = await API.get(`/api/token/${tokenId}`);
+      let res;
+      if (adminMode) {
+        // 管理员模式使用搜索接口通过token_id查询
+        res = await API.get(`/api/token/admin/search`, {
+          params: { token_id: tokenId, page: 1, size: 1 }
+        });
+      } else {
+        res = await API.get(`/api/token/${tokenId}`);
+      }
       const { success, message, data } = res.data;
       if (success) {
-        data.is_edit = true;
-        if (!data.setting) data.setting = originInputs.setting;
-        if (!data.setting.limits) data.setting.limits = originInputs.setting.limits;
-        if (!data.setting.limits.limit_model_setting)
-          data.setting.limits.limit_model_setting = originInputs.setting.limits.limit_model_setting;
-        if (!data.setting.limits.limits_ip_setting) data.setting.limits.limits_ip_setting = originInputs.setting.limits.limits_ip_setting;
-        if (!data.setting.limits.limit_model_setting.models) data.setting.limits.limit_model_setting.models = [];
-        if (!data.setting.limits.limits_ip_setting.whitelist) data.setting.limits.limits_ip_setting.whitelist = [];
-        setInputs(data);
+        // 管理员搜索接口返回的是分页数据，取第一条
+        const tokenData = adminMode ? data.data[0] : data;
+        if (!tokenData) {
+          showError('令牌不存在');
+          return;
+        }
+        tokenData.is_edit = true;
+        if (!tokenData.setting) tokenData.setting = originInputs.setting;
+        if (!tokenData.setting.limits) tokenData.setting.limits = originInputs.setting.limits;
+        if (!tokenData.setting.limits.limit_model_setting)
+          tokenData.setting.limits.limit_model_setting = originInputs.setting.limits.limit_model_setting;
+        if (!tokenData.setting.limits.limits_ip_setting) tokenData.setting.limits.limits_ip_setting = originInputs.setting.limits.limits_ip_setting;
+        if (!tokenData.setting.limits.limit_model_setting.models) tokenData.setting.limits.limit_model_setting.models = [];
+        if (!tokenData.setting.limits.limits_ip_setting.whitelist) tokenData.setting.limits.limits_ip_setting.whitelist = [];
+        setInputs(tokenData);
       } else {
         showError(message);
       }
@@ -202,7 +223,7 @@ const EditModal = ({ open, tokenId, onCancel, onOk, userGroupOptions }) => {
       setInputs(originInputs);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tokenId]);
+  }, [tokenId, adminMode]);
 
   return (
     <Dialog open={open} onClose={onCancel} fullWidth maxWidth={'md'}>
@@ -214,6 +235,31 @@ const EditModal = ({ open, tokenId, onCancel, onOk, userGroupOptions }) => {
         <Formik initialValues={inputs} enableReinitialize validationSchema={validationSchema} onSubmit={submit}>
           {({ errors, handleBlur, handleChange, handleSubmit, touched, values, setFieldError, setFieldValue, isSubmitting }) => (
             <form noValidate onSubmit={handleSubmit}>
+              {/* 管理员模式下显示用户转移字段 */}
+              {adminMode && values.is_edit && (
+                <>
+                  <Alert severity="warning" sx={{ mb: 2 }}>
+                    {t('token_index.adminEditWarning')}
+                  </Alert>
+                  <FormControl fullWidth sx={{ ...theme.typography.otherInput }}>
+                    <InputLabel htmlFor="token-user-id-label">{t('token_index.transferToUser')}</InputLabel>
+                    <OutlinedInput
+                      id="token-user-id-label"
+                      label={t('token_index.transferToUser')}
+                      type="number"
+                      value={values.user_id || ''}
+                      name="user_id"
+                      onBlur={handleBlur}
+                      onChange={handleChange}
+                      inputProps={{ autoComplete: 'off' }}
+                      aria-describedby="helper-text-token-user-id-label"
+                    />
+                    <FormHelperText id="helper-text-token-user-id-label">
+                      {t('token_index.transferToUserHelper')}
+                    </FormHelperText>
+                  </FormControl>
+                </>
+              )}
               <FormControl fullWidth error={Boolean(touched.name && errors.name)} sx={{ ...theme.typography.otherInput }}>
                 <InputLabel htmlFor="channel-name-label">{t('token_index.name')}</InputLabel>
                 <OutlinedInput
@@ -478,7 +524,7 @@ const EditModal = ({ open, tokenId, onCancel, onOk, userGroupOptions }) => {
               )}
 
               {/* 费用标签 - 仅管理员可见 */}
-              {userIsAdmin && (
+              {userIsReliable && (
                 <>
                   <Divider sx={{ margin: '16px 0px' }} />
                   <Typography variant="h4" color="primary">{t('token_index.billingTag')}</Typography>
@@ -532,5 +578,6 @@ EditModal.propTypes = {
   tokenId: PropTypes.number,
   onCancel: PropTypes.func,
   onOk: PropTypes.func,
-  userGroupOptions: PropTypes.array
+  userGroupOptions: PropTypes.array,
+  adminMode: PropTypes.bool
 };
