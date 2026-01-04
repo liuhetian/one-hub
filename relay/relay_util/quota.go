@@ -215,6 +215,7 @@ func (q *Quota) GetLogMeta(usage *types.Usage) map[string]any {
 		"group_ratio":       q.groupRatio,
 		"input_ratio":       q.price.GetInput(),
 		"output_ratio":      q.price.GetOutput(),
+		"token_id":          q.tokenId,
 	}
 
 	firstResponseTime := q.GetFirstResponseTime()
