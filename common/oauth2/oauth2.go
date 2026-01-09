@@ -63,7 +63,7 @@ func InitOAuth2Config() error {
 	oauth2Config := &oauth2.Config{
 		ClientID:     config.OAuth2ClientId,
 		ClientSecret: config.OAuth2ClientSecret,
-		RedirectURL:  config.ServerAddress + "/api/oauth/oauth2",
+		RedirectURL:  config.ServerAddress + "/oauth/oauth2",
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  config.OAuth2AuthorizeUrl,
 			TokenURL: config.OAuth2TokenUrl,
