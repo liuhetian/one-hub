@@ -132,6 +132,31 @@ export async function onOIDCAuthClicked(openInNewTab = false) {
     window.location.href = url;
   }
 }
+
+export async function getOAuth2Endpoint() {
+  try {
+    const res = await API.get('/api/oauth/oauth2/endpoint');
+    const { success, message, data } = res.data;
+    if (success) {
+      return data;
+    } else {
+      showError(message);
+      return '';
+    }
+  } catch (error) {
+    return '';
+  }
+}
+
+export async function onOAuth2AuthClicked(openInNewTab = false) {
+  const url = await getOAuth2Endpoint();
+  if (!url) return;
+  if (openInNewTab) {
+    window.open(url);
+  } else {
+    window.location.href = url;
+  }
+}
 export async function onWebAuthnClicked(username, showError, showSuccess, navigateToStatus) {
   // Remove username check to support discoverable login
   // if (!username || username.trim() === '') {

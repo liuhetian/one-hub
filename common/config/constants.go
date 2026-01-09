@@ -45,6 +45,7 @@ var LarkAuthEnabled = false
 var TurnstileCheckEnabled = false
 var RegisterEnabled = true
 var OIDCAuthEnabled = false
+var OAuth2AuthEnabled = false
 
 // 是否开启内容审查
 var EnableSafe = false
@@ -174,6 +175,18 @@ var OIDCIssuer = ""
 var OIDCScopes = ""
 var OIDCUsernameClaims = ""
 
+// OAuth2 配置
+var OAuth2ClientId = ""
+var OAuth2ClientSecret = ""
+var OAuth2AuthorizeUrl = ""
+var OAuth2TokenUrl = ""
+var OAuth2UserInfoUrl = ""
+var OAuth2Scopes = ""
+var OAuth2UserIdField = ""      // 用户ID字段名，如 "id", "sub", "user_id"
+var OAuth2UsernameField = ""    // 用户名字段名，如 "username", "login", "name"
+var OAuth2EmailField = ""       // 邮箱字段名，如 "email"
+var OAuth2DisplayNameField = "" // 显示名字段名，如 "display_name", "nickname"
+
 var QuotaForNewUser = 0
 var QuotaForInviter = 0
 var QuotaForInvitee = 0
@@ -215,11 +228,11 @@ var GeminiAPIEnabled = true
 var ClaudeAPIEnabled = true
 
 const (
-	RoleGuestUser     = 0
-	RoleCommonUser    = 1
-	RoleReliableUser  = 3   // 可信的内部员工
-	RoleAdminUser     = 10
-	RoleRootUser      = 100
+	RoleGuestUser    = 0
+	RoleCommonUser   = 1
+	RoleReliableUser = 3 // 可信的内部员工
+	RoleAdminUser    = 10
+	RoleRootUser     = 100
 )
 
 var RateLimitKeyExpirationDuration = 20 * time.Minute

@@ -46,6 +46,10 @@ func SetApiRouter(router *gin.Engine) {
 		apiRouter.GET("/oauth/endpoint", middleware.CriticalRateLimit(), controller.OIDCEndpoint)
 		apiRouter.GET("/oauth/oidc", middleware.CriticalRateLimit(), controller.OIDCAuth)
 
+		// OAuth2 路由
+		apiRouter.GET("/oauth/oauth2/endpoint", middleware.CriticalRateLimit(), controller.OAuth2Endpoint)
+		apiRouter.GET("/oauth/oauth2", middleware.CriticalRateLimit(), controller.OAuth2Auth)
+
 		webauthnGroup := apiRouter.Group("/webauthn")
 		{
 			// 注册相关

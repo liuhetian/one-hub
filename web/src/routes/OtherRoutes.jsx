@@ -11,6 +11,7 @@ const AuthRegister = Loadable(lazy(() => import('views/Authentication/Auth/Regis
 const GitHubOAuth = Loadable(lazy(() => import('views/Authentication/Auth/GitHubOAuth')));
 const LarkOAuth = Loadable(lazy(() => import('views/Authentication/Auth/LarkOAuth')));
 const OIDCOAuth = Loadable(lazy(() => import('views/Authentication/Auth/OIDCOAuth')));
+const OAuth2OAuth = Loadable(lazy(() => import('views/Authentication/Auth/OAuth2OAuth')));
 const ForgetPassword = Loadable(lazy(() => import('views/Authentication/Auth/ForgetPassword')));
 const ResetPassword = Loadable(lazy(() => import('views/Authentication/Auth/ResetPassword')));
 const Home = Loadable(lazy(() => import('views/Home')));
@@ -69,6 +70,10 @@ const OtherRoutes = {
     {
       path: '/oauth/oidc',
       element: <OIDCOAuth />
+    },
+    {
+      path: '/oauth/oauth2',
+      element: <OAuth2OAuth />
     },
     {
       path: '/oauth/lark',

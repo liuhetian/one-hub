@@ -72,6 +72,19 @@ func InitOptionMap() {
 	config.GlobalOption.RegisterString("OIDCScopes", &config.OIDCScopes)
 	config.GlobalOption.RegisterString("OIDCUsernameClaims", &config.OIDCUsernameClaims)
 
+	// OAuth2 配置
+	config.GlobalOption.RegisterBool("OAuth2AuthEnabled", &config.OAuth2AuthEnabled)
+	config.GlobalOption.RegisterString("OAuth2ClientId", &config.OAuth2ClientId)
+	config.GlobalOption.RegisterString("OAuth2ClientSecret", &config.OAuth2ClientSecret)
+	config.GlobalOption.RegisterString("OAuth2AuthorizeUrl", &config.OAuth2AuthorizeUrl)
+	config.GlobalOption.RegisterString("OAuth2TokenUrl", &config.OAuth2TokenUrl)
+	config.GlobalOption.RegisterString("OAuth2UserInfoUrl", &config.OAuth2UserInfoUrl)
+	config.GlobalOption.RegisterString("OAuth2Scopes", &config.OAuth2Scopes)
+	config.GlobalOption.RegisterString("OAuth2UserIdField", &config.OAuth2UserIdField)
+	config.GlobalOption.RegisterString("OAuth2UsernameField", &config.OAuth2UsernameField)
+	config.GlobalOption.RegisterString("OAuth2EmailField", &config.OAuth2EmailField)
+	config.GlobalOption.RegisterString("OAuth2DisplayNameField", &config.OAuth2DisplayNameField)
+
 	config.GlobalOption.RegisterString("WeChatServerAddress", &config.WeChatServerAddress)
 	config.GlobalOption.RegisterString("WeChatServerToken", &config.WeChatServerToken)
 	config.GlobalOption.RegisterString("WeChatAccountQRCodeImageURL", &config.WeChatAccountQRCodeImageURL)

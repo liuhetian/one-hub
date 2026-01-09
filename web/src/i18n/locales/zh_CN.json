@@ -940,6 +940,7 @@
         "emailVerification": "通过密码注册时需要进行邮箱验证",
         "gitHubOAuth": "允许通过 GitHub 账户登录 & 注册",
         "oidcAuth": "允许通过 OIDC 账户登录 & 注册",
+        "oauth2Auth": "允许通过 OAuth2 账户登录 & 注册",
         "weChatAuth": "允许通过微信登录 & 注册",
         "larkAuth": "允许通过飞书登录 & 注册",
         "registerEnabled": "允许新用户注册（此项为否时，新用户将无法以任何方式进行注册）",
@@ -1024,6 +1025,31 @@
         "usernameClaims": "用户名声明（Claims）",
         "usernameClaimsPlaceholder": "请输入用户名声明(例如username)",
         "saveButton": "保存OIDC设置"
+      },
+      "configureOAuth2Authorization": {
+        "title": "配置OAuth2授权系统",
+        "subTitle": "用以配置通用OAuth2授权登录系统（适用于不支持OIDC的OAuth2服务）",
+        "clientId": "客户端ID（Client ID）",
+        "clientIdPlaceholder": "请输入客户端ID",
+        "clientSecret": "客户端密钥(Secret)",
+        "clientSecretPlaceholder": "敏感信息不会发送到前端显示",
+        "authorizeUrl": "授权地址（Authorize URL）",
+        "authorizeUrlPlaceholder": "请输入授权地址，如 https://example.com/oauth/authorize",
+        "tokenUrl": "令牌地址（Token URL）",
+        "tokenUrlPlaceholder": "请输入令牌地址，如 https://example.com/oauth/token",
+        "userInfoUrl": "用户信息地址（UserInfo URL）",
+        "userInfoUrlPlaceholder": "请输入用户信息地址，如 https://example.com/api/user",
+        "scopes": "权限范围（Scopes）",
+        "scopesPlaceholder": "请输入权限范围（用英文逗号分隔）",
+        "userIdField": "用户ID字段名",
+        "userIdFieldPlaceholder": "用户信息JSON中ID字段名，如 id, sub, user_id",
+        "usernameField": "用户名字段名",
+        "usernameFieldPlaceholder": "用户信息JSON中用户名字段名，如 username, login",
+        "emailField": "邮箱字段名",
+        "emailFieldPlaceholder": "用户信息JSON中邮箱字段名，如 email",
+        "displayNameField": "显示名字段名",
+        "displayNameFieldPlaceholder": "用户信息JSON中显示名字段名，如 name, nickname",
+        "saveButton": "保存OAuth2设置"
       },
       "configureTurnstile": {
         "title": "配置 Turnstile",
@@ -1112,7 +1138,10 @@
     "useGithubLogin": "使用 Github 登录",
     "useWechatLogin": "使用 Wechat 登录",
     "useOIDCLogin": "使用 OIDC 登录",
-    "useLarkLogin": "使用飞书登录"
+    "useOAuth2Login": "使用 OAuth2 登录",
+    "useLarkLogin": "使用飞书登录",
+    "oauth2Error": "OAuth2 登录失败",
+    "oauth2CountError": "OAuth2 登录失败，正在进行第 {{count}} 次重试"
   },
   "description": "All in one 的 OpenAI 接口\n整合各种 API 访问方式\n一键部署，开箱即用",
   "about": {
