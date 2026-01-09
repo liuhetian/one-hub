@@ -108,6 +108,7 @@ const SystemSetting = () => {
       case 'WeChatAuthEnabled':
       case 'LarkAuthEnabled':
       case 'OIDCAuthEnabled':
+      case 'OAuth2AuthEnabled':
       case 'TurnstileCheckEnabled':
       case 'EmailDomainRestrictionEnabled':
       case 'RegisterEnabled':
@@ -163,6 +164,16 @@ const SystemSetting = () => {
       name === 'OIDCIssuer' ||
       name === 'OIDCScopes' ||
       name === 'OIDCUsernameClaims' ||
+      name === 'OAuth2ClientId' ||
+      name === 'OAuth2ClientSecret' ||
+      name === 'OAuth2AuthorizeUrl' ||
+      name === 'OAuth2TokenUrl' ||
+      name === 'OAuth2UserInfoUrl' ||
+      name === 'OAuth2Scopes' ||
+      name === 'OAuth2UserIdField' ||
+      name === 'OAuth2UsernameField' ||
+      name === 'OAuth2EmailField' ||
+      name === 'OAuth2DisplayNameField' ||
       name === 'WeChatServerAddress' ||
       name === 'WeChatServerToken' ||
       name === 'WeChatAccountQRCodeImageURL' ||
