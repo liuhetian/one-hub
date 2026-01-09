@@ -67,6 +67,14 @@ func UpdateOption(c *gin.Context) {
 			})
 			return
 		}
+	case "OAuth2AuthEnabled":
+		if option.Value == "true" && (config.OAuth2ClientId == "" || config.OAuth2ClientSecret == "" || config.OAuth2AuthorizeUrl == "" || config.OAuth2TokenUrl == "" || config.OAuth2UserInfoUrl == "") {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "无法启用 OAuth2，请先填入OAuth2信息！",
+			})
+			return
+		}
 	case "EmailDomainRestrictionEnabled":
 		if option.Value == "true" && len(config.EmailDomainWhitelist) == 0 {
 			c.JSON(http.StatusOK, gin.H{

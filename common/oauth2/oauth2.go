@@ -51,6 +51,10 @@ func InitOAuth2Config() error {
 		return errors.New("OAuth2 UserInfoUrl 未配置")
 	}
 
+	if config.ServerAddress == "" {
+		return errors.New("ServerAddress 未配置")
+	}
+
 	scopes := []string{}
 	if config.OAuth2Scopes != "" {
 		scopes = strings.Split(config.OAuth2Scopes, ",")
