@@ -170,7 +170,6 @@ const SystemSetting = () => {
       name === 'OAuth2TokenUrl' ||
       name === 'OAuth2UserInfoUrl' ||
       name === 'OAuth2Scopes' ||
-      name === 'OAuth2UserIdField' ||
       name === 'OAuth2UsernameField' ||
       name === 'OAuth2EmailField' ||
       name === 'OAuth2DisplayNameField' ||
@@ -279,9 +278,6 @@ const SystemSetting = () => {
     }
     if (originInputs['OAuth2Scopes'] !== inputs.OAuth2Scopes) {
       await updateOption('OAuth2Scopes', inputs.OAuth2Scopes);
-    }
-    if (originInputs['OAuth2UserIdField'] !== inputs.OAuth2UserIdField) {
-      await updateOption('OAuth2UserIdField', inputs.OAuth2UserIdField);
     }
     if (originInputs['OAuth2UsernameField'] !== inputs.OAuth2UsernameField) {
       await updateOption('OAuth2UsernameField', inputs.OAuth2UsernameField);
@@ -1003,21 +999,6 @@ const SystemSetting = () => {
                   onChange={handleInputChange}
                   label={t('setting_index.systemSettings.configureOAuth2Authorization.scopes')}
                   placeholder={t('setting_index.systemSettings.configureOAuth2Authorization.scopesPlaceholder')}
-                  disabled={loading}
-                />
-              </FormControl>
-            </Grid>
-
-            <Grid xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel htmlFor="OAuth2UserIdField">{t('setting_index.systemSettings.configureOAuth2Authorization.userIdField')}</InputLabel>
-                <OutlinedInput
-                  id="OAuth2UserIdField"
-                  name="OAuth2UserIdField"
-                  value={inputs.OAuth2UserIdField || ''}
-                  onChange={handleInputChange}
-                  label={t('setting_index.systemSettings.configureOAuth2Authorization.userIdField')}
-                  placeholder={t('setting_index.systemSettings.configureOAuth2Authorization.userIdFieldPlaceholder')}
                   disabled={loading}
                 />
               </FormControl>

@@ -1131,8 +1131,6 @@
         "userInfoUrlPlaceholder": "e.g., https://example.com/api/user",
         "scopes": "Scopes",
         "scopesPlaceholder": "Enter scopes (separated by commas)",
-        "userIdField": "User ID Field",
-        "userIdFieldPlaceholder": "User ID field name in JSON, e.g., id, sub, user_id",
         "usernameField": "Username Field",
         "usernameFieldPlaceholder": "Username field name in JSON, e.g., username, login",
         "emailField": "Email Field",

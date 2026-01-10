@@ -1041,8 +1041,6 @@
         "userInfoUrlPlaceholder": "请输入用户信息地址，如 https://example.com/api/user",
         "scopes": "权限范围（Scopes）",
         "scopesPlaceholder": "请输入权限范围（用英文逗号分隔）",
-        "userIdField": "用户ID字段名",
-        "userIdFieldPlaceholder": "用户信息JSON中ID字段名，如 id, sub, user_id",
         "usernameField": "用户名字段名",
         "usernameFieldPlaceholder": "用户信息JSON中用户名字段名，如 username, login",
         "emailField": "邮箱字段名",
