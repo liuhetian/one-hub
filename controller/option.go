@@ -110,8 +110,8 @@ func UpdateOption(c *gin.Context) {
 		return
 	}
 
-	// 如果是 OAuth2 相关配置变更，重置 OAuth2 配置缓存
-	if strings.HasPrefix(option.Key, "OAuth2") {
+	// 如果是 OAuth2 相关配置变更或 ServerAddress 变更，重置 OAuth2 配置缓存
+	if strings.HasPrefix(option.Key, "OAuth2") || option.Key == "ServerAddress" {
 		oauth2.ResetOAuth2Config()
 	}
 
