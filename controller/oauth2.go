@@ -10,6 +10,7 @@ import (
 	"one-api/common/utils"
 	"one-api/model"
 	"strconv"
+	"strings"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -118,22 +119,13 @@ func OAuth2Auth(c *gin.Context) {
 		return
 	}
 
-	// 检测OAuth2用户ID
-	if userInfo.Id == "" {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": "OAuth2用户信息中没有ID",
-		})
-		return
-	}
-
 	// 初始化用户对象
 	user := model.User{
-		OAuth2Id: userInfo.Id,
+		Email: userInfo.Email,
 	}
 
-	// 尝试通过OAuth2Id查询用户
-	if err = user.FillUserByOAuth2Id(); err == nil {
+	// 尝试通过邮箱查询用户
+	if err = user.FillUserByEmail(); err == nil {
 		if user.Status == config.UserStatusEnabled {
 			setupLogin(&user, c)
 			return
@@ -145,7 +137,7 @@ func OAuth2Auth(c *gin.Context) {
 		return
 	}
 
-	// OAuth2Id查询失败，则尝试通过username查询（如果有username）
+	// 邮箱查询失败，检查是否是记录不存在
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		logger.SysError("查询用户错误: " + err.Error())
 		c.JSON(http.StatusOK, gin.H{
@@ -153,41 +145,6 @@ func OAuth2Auth(c *gin.Context) {
 			"success": false,
 		})
 		return
-	}
-
-	// 如果有用户名，尝试通过用户名匹配
-	if userInfo.Username != "" {
-		user.Username = userInfo.Username
-		if err = user.FillUserByUsername(); err == nil {
-			if user.Status == config.UserStatusEnabled {
-				// 如果通过用户名查询用户成功、则补全用户OAuth2 ID并且登录
-				user.OAuth2Id = userInfo.Id
-				ok := user.Update(false)
-				if ok != nil {
-					c.JSON(http.StatusOK, gin.H{
-						"message": ok.Error(),
-						"success": false,
-					})
-					return
-				}
-				setupLogin(&user, c)
-				return
-			}
-			c.JSON(http.StatusOK, gin.H{
-				"message": "用户已被封禁或不存在",
-				"success": false,
-			})
-			return
-		}
-
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			logger.SysError("查询用户错误: " + err.Error())
-			c.JSON(http.StatusOK, gin.H{
-				"message": err.Error(),
-				"success": false,
-			})
-			return
-		}
 	}
 
 	// 用户不存在，尝试注册
@@ -213,7 +170,9 @@ func OAuth2Auth(c *gin.Context) {
 	if userInfo.Username != "" {
 		user.Username = userInfo.Username
 	} else {
-		user.Username = "oauth2_" + userInfo.Id
+		// 使用邮箱前缀作为用户名
+		emailPrefix := strings.Split(userInfo.Email, "@")[0]
+		user.Username = "oauth2_" + emailPrefix
 	}
 
 	// 检查用户名是否已被占用
@@ -221,11 +180,7 @@ func OAuth2Auth(c *gin.Context) {
 		user.Username = "oauth2_" + strconv.Itoa(model.GetMaxUserId()+1)
 	}
 
-	user.OAuth2Id = userInfo.Id
-
-	if userInfo.Email != "" {
-		user.Email = userInfo.Email
-	}
+	user.Email = userInfo.Email
 
 	if userInfo.DisplayName != "" {
 		user.DisplayName = userInfo.DisplayName
@@ -288,11 +243,11 @@ func OAuth2Bind(c *gin.Context) {
 		return
 	}
 
-	// 检查OAuth2 ID是否已被绑定
-	if model.IsOAuth2IdAlreadyTaken(userInfo.Id) {
+	// 检查邮箱是否已被其他用户绑定
+	if model.IsEmailAlreadyTaken(userInfo.Email) {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
-			"message": "该OAuth2账户已被绑定",
+			"message": "该邮箱已被其他用户绑定",
 		})
 		return
 	}
@@ -309,11 +264,10 @@ func OAuth2Bind(c *gin.Context) {
 		return
 	}
 
-	user.OAuth2Id = userInfo.Id
-
-	// 如果用户的邮箱为空，且OAuth2用户的邮箱不为空，且邮箱未被注册，则更新用户的邮箱
-	if user.Email == "" && userInfo.Email != "" && !model.IsEmailAlreadyTaken(userInfo.Email) {
-		user.Email = userInfo.Email
+	// 更新用户的邮箱为OAuth2邮箱
+	user.Email = userInfo.Email
+	if userInfo.DisplayName != "" {
+		user.DisplayName = userInfo.DisplayName
 	}
 
 	err = user.Update(false)

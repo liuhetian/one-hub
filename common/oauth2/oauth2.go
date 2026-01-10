@@ -23,7 +23,6 @@ type OAuth2Config struct {
 }
 
 type OAuth2UserInfo struct {
-	Id          string `json:"id"`
 	Username    string `json:"username"`
 	Email       string `json:"email"`
 	DisplayName string `json:"display_name"`
@@ -147,13 +146,12 @@ func (c *OAuth2Config) GetUserInfo(ctx context.Context, token *oauth2.Token) (*O
 	userInfo := &OAuth2UserInfo{}
 
 	// 根据配置的字段名获取用户信息
-	userInfo.Id = getStringField(rawData, config.OAuth2UserIdField)
 	userInfo.Username = getStringField(rawData, config.OAuth2UsernameField)
 	userInfo.Email = getStringField(rawData, config.OAuth2EmailField)
 	userInfo.DisplayName = getStringField(rawData, config.OAuth2DisplayNameField)
 
-	if userInfo.Id == "" {
-		return nil, errors.New("OAuth2用户信息中缺少ID字段")
+	if userInfo.Email == "" {
+		return nil, errors.New("OAuth2用户信息中缺少Email字段")
 	}
 
 	return userInfo, nil
