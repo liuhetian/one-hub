@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"one-api/common/config"
+	"one-api/common/oauth2"
 	"one-api/common/utils"
 	"one-api/model"
 	"one-api/safty"
@@ -67,6 +68,14 @@ func UpdateOption(c *gin.Context) {
 			})
 			return
 		}
+	case "OAuth2AuthEnabled":
+		if option.Value == "true" && (config.OAuth2ClientId == "" || config.OAuth2ClientSecret == "" || config.OAuth2AuthorizeUrl == "" || config.OAuth2TokenUrl == "" || config.OAuth2UserInfoUrl == "") {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "无法启用 OAuth2，请先填入OAuth2信息！",
+			})
+			return
+		}
 	case "EmailDomainRestrictionEnabled":
 		if option.Value == "true" && len(config.EmailDomainWhitelist) == 0 {
 			c.JSON(http.StatusOK, gin.H{
@@ -100,6 +109,12 @@ func UpdateOption(c *gin.Context) {
 		})
 		return
 	}
+
+	// 如果是 OAuth2 相关配置变更，重置 OAuth2 配置缓存
+	if strings.HasPrefix(option.Key, "OAuth2") {
+		oauth2.ResetOAuth2Config()
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
