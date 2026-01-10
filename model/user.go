@@ -252,13 +252,7 @@ func (user *User) FillUserByEmail() error {
 	}
 
 	result := DB.Where(User{Email: user.Email}).First(user)
-	if result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return errors.New("没有找到用户！")
-		}
-		return result.Error
-	}
-	return nil
+	return result.Error
 }
 
 func (user *User) FillUserByGitHubId() error {
