@@ -38,7 +38,7 @@ import Wechat from 'assets/images/icons/wechat.svg';
 import Lark from 'assets/images/icons/lark.svg';
 import Oidc from 'assets/images/icons/oidc.svg';
 import Webauthn from 'assets/images/icons/webauthn.svg';
-import { onGitHubOAuthClicked, onLarkOAuthClicked, onOIDCAuthClicked, onWebAuthnClicked } from 'utils/common';
+import { onGitHubOAuthClicked, onLarkOAuthClicked, onOIDCAuthClicked, onOAuth2AuthClicked, onWebAuthnClicked } from 'utils/common';
 import { useTranslation } from 'react-i18next';
 
 // ============================|| FIREBASE - LOGIN ||============================ //
@@ -54,7 +54,7 @@ const LoginForm = ({ ...others }) => {
   // const [checked, setChecked] = useState(true);
 
   let tripartiteLogin = false;
-  if (siteInfo.github_oauth || siteInfo.wechat_login || siteInfo.lark_client_id || siteInfo.oidc_auth) {
+  if (siteInfo.github_oauth || siteInfo.wechat_login || siteInfo.lark_client_id || siteInfo.oidc_auth || siteInfo.oauth2_auth) {
     tripartiteLogin = true;
   }
 
@@ -161,6 +161,28 @@ const LoginForm = ({ ...others }) => {
                     <img src={Oidc} alt="oidc" width={25} height={25} style={{ marginRight: matchDownSM ? 8 : 16 }} />
                   </Box>
                   {t('login.useOIDCLogin')}
+                </Button>
+              </AnimateButton>
+            </Grid>
+          )}
+          {/*OAuth2配置*/}
+          {siteInfo.oauth2_auth && (
+            <Grid item xs={12}>
+              <AnimateButton>
+                <Button
+                  disableElevation
+                  fullWidth
+                  onClick={() => onOAuth2AuthClicked()}
+                  size="large"
+                  variant="outlined"
+                  sx={{
+                    ...theme.typography.LoginButton
+                  }}
+                >
+                  <Box sx={{ mr: { xs: 1, sm: 2, width: 20 }, display: 'flex', alignItems: 'center' }}>
+                    <img src={Oidc} alt="oauth2" width={25} height={25} style={{ marginRight: matchDownSM ? 8 : 16 }} />
+                  </Box>
+                  {t('login.useOAuth2Login')}
                 </Button>
               </AnimateButton>
             </Grid>

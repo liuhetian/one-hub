@@ -108,6 +108,7 @@ const SystemSetting = () => {
       case 'WeChatAuthEnabled':
       case 'LarkAuthEnabled':
       case 'OIDCAuthEnabled':
+      case 'OAuth2AuthEnabled':
       case 'TurnstileCheckEnabled':
       case 'EmailDomainRestrictionEnabled':
       case 'RegisterEnabled':
@@ -163,6 +164,15 @@ const SystemSetting = () => {
       name === 'OIDCIssuer' ||
       name === 'OIDCScopes' ||
       name === 'OIDCUsernameClaims' ||
+      name === 'OAuth2ClientId' ||
+      name === 'OAuth2ClientSecret' ||
+      name === 'OAuth2AuthorizeUrl' ||
+      name === 'OAuth2TokenUrl' ||
+      name === 'OAuth2UserInfoUrl' ||
+      name === 'OAuth2Scopes' ||
+      name === 'OAuth2UsernameField' ||
+      name === 'OAuth2EmailField' ||
+      name === 'OAuth2DisplayNameField' ||
       name === 'WeChatServerAddress' ||
       name === 'WeChatServerToken' ||
       name === 'WeChatAccountQRCodeImageURL' ||
@@ -246,6 +256,37 @@ const SystemSetting = () => {
     // 检查并更新 OIDCUsernameClaims
     if (originInputs['OIDCUsernameClaims'] !== inputs.OIDCUsernameClaims) {
       await updateOption('OIDCUsernameClaims', inputs.OIDCUsernameClaims);
+    }
+  };
+
+  const submitOAuth2OAuth = async () => {
+    // OAuth2 配置
+    if (originInputs['OAuth2ClientId'] !== inputs.OAuth2ClientId) {
+      await updateOption('OAuth2ClientId', inputs.OAuth2ClientId);
+    }
+    if (originInputs['OAuth2ClientSecret'] !== inputs.OAuth2ClientSecret && inputs.OAuth2ClientSecret !== '') {
+      await updateOption('OAuth2ClientSecret', inputs.OAuth2ClientSecret);
+    }
+    if (originInputs['OAuth2AuthorizeUrl'] !== inputs.OAuth2AuthorizeUrl) {
+      await updateOption('OAuth2AuthorizeUrl', inputs.OAuth2AuthorizeUrl);
+    }
+    if (originInputs['OAuth2TokenUrl'] !== inputs.OAuth2TokenUrl) {
+      await updateOption('OAuth2TokenUrl', inputs.OAuth2TokenUrl);
+    }
+    if (originInputs['OAuth2UserInfoUrl'] !== inputs.OAuth2UserInfoUrl) {
+      await updateOption('OAuth2UserInfoUrl', inputs.OAuth2UserInfoUrl);
+    }
+    if (originInputs['OAuth2Scopes'] !== inputs.OAuth2Scopes) {
+      await updateOption('OAuth2Scopes', inputs.OAuth2Scopes);
+    }
+    if (originInputs['OAuth2UsernameField'] !== inputs.OAuth2UsernameField) {
+      await updateOption('OAuth2UsernameField', inputs.OAuth2UsernameField);
+    }
+    if (originInputs['OAuth2EmailField'] !== inputs.OAuth2EmailField) {
+      await updateOption('OAuth2EmailField', inputs.OAuth2EmailField);
+    }
+    if (originInputs['OAuth2DisplayNameField'] !== inputs.OAuth2DisplayNameField) {
+      await updateOption('OAuth2DisplayNameField', inputs.OAuth2DisplayNameField);
     }
   };
 
@@ -350,6 +391,12 @@ const SystemSetting = () => {
               <FormControlLabel
                 label={t('setting_index.systemSettings.configureLoginRegister.oidcAuth')}
                 control={<Checkbox checked={inputs.OIDCAuthEnabled === 'true'} onChange={handleInputChange} name="OIDCAuthEnabled" />}
+              />
+            </Grid>
+            <Grid xs={12} md={3}>
+              <FormControlLabel
+                label={t('setting_index.systemSettings.configureLoginRegister.oauth2Auth')}
+                control={<Checkbox checked={inputs.OAuth2AuthEnabled === 'true'} onChange={handleInputChange} name="OAuth2AuthEnabled" />}
               />
             </Grid>
             <Grid xs={12} md={3}>
@@ -857,6 +904,154 @@ const SystemSetting = () => {
             <Grid xs={12}>
               <Button variant="contained" onClick={submitOIDCOAuth}>
                 {t('setting_index.systemSettings.configureOIDCAuthorization.saveButton')}
+              </Button>
+            </Grid>
+          </Grid>
+        </SubCard>
+
+        <SubCard
+          title={t('setting_index.systemSettings.configureOAuth2Authorization.title')}
+          subTitle={t('setting_index.systemSettings.configureOAuth2Authorization.subTitle')}
+        >
+          <Grid container spacing={{ xs: 3, sm: 2, md: 4 }}>
+            <Grid xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel htmlFor="OAuth2ClientId">{t('setting_index.systemSettings.configureOAuth2Authorization.clientId')}</InputLabel>
+                <OutlinedInput
+                  id="OAuth2ClientId"
+                  name="OAuth2ClientId"
+                  value={inputs.OAuth2ClientId || ''}
+                  onChange={handleInputChange}
+                  label={t('setting_index.systemSettings.configureOAuth2Authorization.clientId')}
+                  placeholder={t('setting_index.systemSettings.configureOAuth2Authorization.clientIdPlaceholder')}
+                  disabled={loading}
+                />
+              </FormControl>
+            </Grid>
+
+            <Grid xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel htmlFor="OAuth2ClientSecret">{t('setting_index.systemSettings.configureOAuth2Authorization.clientSecret')}</InputLabel>
+                <OutlinedInput
+                  id="OAuth2ClientSecret"
+                  name="OAuth2ClientSecret"
+                  value={inputs.OAuth2ClientSecret || ''}
+                  onChange={handleInputChange}
+                  label={t('setting_index.systemSettings.configureOAuth2Authorization.clientSecret')}
+                  placeholder={t('setting_index.systemSettings.configureOAuth2Authorization.clientSecretPlaceholder')}
+                  disabled={loading}
+                />
+              </FormControl>
+            </Grid>
+
+            <Grid xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel htmlFor="OAuth2AuthorizeUrl">{t('setting_index.systemSettings.configureOAuth2Authorization.authorizeUrl')}</InputLabel>
+                <OutlinedInput
+                  id="OAuth2AuthorizeUrl"
+                  name="OAuth2AuthorizeUrl"
+                  value={inputs.OAuth2AuthorizeUrl || ''}
+                  onChange={handleInputChange}
+                  label={t('setting_index.systemSettings.configureOAuth2Authorization.authorizeUrl')}
+                  placeholder={t('setting_index.systemSettings.configureOAuth2Authorization.authorizeUrlPlaceholder')}
+                  disabled={loading}
+                />
+              </FormControl>
+            </Grid>
+
+            <Grid xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel htmlFor="OAuth2TokenUrl">{t('setting_index.systemSettings.configureOAuth2Authorization.tokenUrl')}</InputLabel>
+                <OutlinedInput
+                  id="OAuth2TokenUrl"
+                  name="OAuth2TokenUrl"
+                  value={inputs.OAuth2TokenUrl || ''}
+                  onChange={handleInputChange}
+                  label={t('setting_index.systemSettings.configureOAuth2Authorization.tokenUrl')}
+                  placeholder={t('setting_index.systemSettings.configureOAuth2Authorization.tokenUrlPlaceholder')}
+                  disabled={loading}
+                />
+              </FormControl>
+            </Grid>
+
+            <Grid xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel htmlFor="OAuth2UserInfoUrl">{t('setting_index.systemSettings.configureOAuth2Authorization.userInfoUrl')}</InputLabel>
+                <OutlinedInput
+                  id="OAuth2UserInfoUrl"
+                  name="OAuth2UserInfoUrl"
+                  value={inputs.OAuth2UserInfoUrl || ''}
+                  onChange={handleInputChange}
+                  label={t('setting_index.systemSettings.configureOAuth2Authorization.userInfoUrl')}
+                  placeholder={t('setting_index.systemSettings.configureOAuth2Authorization.userInfoUrlPlaceholder')}
+                  disabled={loading}
+                />
+              </FormControl>
+            </Grid>
+
+            <Grid xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel htmlFor="OAuth2Scopes">{t('setting_index.systemSettings.configureOAuth2Authorization.scopes')}</InputLabel>
+                <OutlinedInput
+                  id="OAuth2Scopes"
+                  name="OAuth2Scopes"
+                  value={inputs.OAuth2Scopes || ''}
+                  onChange={handleInputChange}
+                  label={t('setting_index.systemSettings.configureOAuth2Authorization.scopes')}
+                  placeholder={t('setting_index.systemSettings.configureOAuth2Authorization.scopesPlaceholder')}
+                  disabled={loading}
+                />
+              </FormControl>
+            </Grid>
+
+            <Grid xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel htmlFor="OAuth2UsernameField">{t('setting_index.systemSettings.configureOAuth2Authorization.usernameField')}</InputLabel>
+                <OutlinedInput
+                  id="OAuth2UsernameField"
+                  name="OAuth2UsernameField"
+                  value={inputs.OAuth2UsernameField || ''}
+                  onChange={handleInputChange}
+                  label={t('setting_index.systemSettings.configureOAuth2Authorization.usernameField')}
+                  placeholder={t('setting_index.systemSettings.configureOAuth2Authorization.usernameFieldPlaceholder')}
+                  disabled={loading}
+                />
+              </FormControl>
+            </Grid>
+
+            <Grid xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel htmlFor="OAuth2EmailField">{t('setting_index.systemSettings.configureOAuth2Authorization.emailField')}</InputLabel>
+                <OutlinedInput
+                  id="OAuth2EmailField"
+                  name="OAuth2EmailField"
+                  value={inputs.OAuth2EmailField || ''}
+                  onChange={handleInputChange}
+                  label={t('setting_index.systemSettings.configureOAuth2Authorization.emailField')}
+                  placeholder={t('setting_index.systemSettings.configureOAuth2Authorization.emailFieldPlaceholder')}
+                  disabled={loading}
+                />
+              </FormControl>
+            </Grid>
+
+            <Grid xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel htmlFor="OAuth2DisplayNameField">{t('setting_index.systemSettings.configureOAuth2Authorization.displayNameField')}</InputLabel>
+                <OutlinedInput
+                  id="OAuth2DisplayNameField"
+                  name="OAuth2DisplayNameField"
+                  value={inputs.OAuth2DisplayNameField || ''}
+                  onChange={handleInputChange}
+                  label={t('setting_index.systemSettings.configureOAuth2Authorization.displayNameField')}
+                  placeholder={t('setting_index.systemSettings.configureOAuth2Authorization.displayNameFieldPlaceholder')}
+                  disabled={loading}
+                />
+              </FormControl>
+            </Grid>
+
+            <Grid xs={12}>
+              <Button variant="contained" onClick={submitOAuth2OAuth}>
+                {t('setting_index.systemSettings.configureOAuth2Authorization.saveButton')}
               </Button>
             </Grid>
           </Grid>

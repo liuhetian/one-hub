@@ -29,6 +29,7 @@ func GetStatus(c *gin.Context) {
 			"github_oauth":        config.GitHubOAuthEnabled,
 			"github_client_id":    config.GitHubClientId,
 			"oidc_auth":           config.OIDCAuthEnabled,
+			"oauth2_auth":         config.OAuth2AuthEnabled,
 			"lark_login":          config.LarkAuthEnabled,
 			"lark_client_id":      config.LarkClientId,
 			"system_name":         config.SystemName,
