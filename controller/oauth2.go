@@ -186,6 +186,9 @@ func OAuth2Auth(c *gin.Context) {
 		user.DisplayName = userInfo.DisplayName
 	} else if userInfo.Username != "" {
 		user.DisplayName = userInfo.Username
+	} else {
+		// 都为空时，使用邮箱前缀
+		user.DisplayName = strings.Split(userInfo.Email, "@")[0]
 	}
 
 	user.Role = config.RoleCommonUser
