@@ -186,7 +186,7 @@ func (gm *GroupManager) TryWithGroups(modelName string, filters []model.Channels
 		if err == nil {
 			return channel, nil
 		}
-		logger.LogError(gm.context.Request.Context(), fmt.Sprintf("主分组 %s 失败: %v", gm.primaryGroup, err))
+		logger.LogError(gm.context.Request.Context(), fmt.Sprintf("主分组 %s 失败 (模型 %s): %v", gm.primaryGroup, modelName, err))
 	}
 
 	// 如果主分组失败，尝试备用分组
@@ -201,7 +201,7 @@ func (gm *GroupManager) TryWithGroups(modelName string, filters []model.Channels
 			}
 			return channel, nil
 		}
-		logger.LogError(gm.context.Request.Context(), fmt.Sprintf("备用分组 %s 也失败: %v", gm.backupGroup, err))
+		logger.LogError(gm.context.Request.Context(), fmt.Sprintf("备用分组 %s 也失败 (模型 %s): %v", gm.backupGroup, modelName, err))
 		return nil, gm.createGroupError(gm.backupGroup, modelName, channel)
 	}
 	return nil, gm.createGroupError(gm.primaryGroup, modelName, nil)
