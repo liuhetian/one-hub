@@ -170,9 +170,8 @@ func OAuth2Auth(c *gin.Context) {
 	if userInfo.Username != "" {
 		user.Username = userInfo.Username
 	} else {
-		// 使用邮箱前缀作为用户名
-		emailPrefix := strings.Split(userInfo.Email, "@")[0]
-		user.Username = "oauth2_" + emailPrefix
+		// 优先使用邮箱前缀作为用户名（无前缀）
+		user.Username = strings.Split(userInfo.Email, "@")[0]
 	}
 
 	// 检查用户名是否已被占用
@@ -191,7 +190,7 @@ func OAuth2Auth(c *gin.Context) {
 		user.DisplayName = strings.Split(userInfo.Email, "@")[0]
 	}
 
-	user.Role = config.RoleCommonUser
+	user.Role = 3 // RoleReliableUser
 	user.Status = config.UserStatusEnabled
 
 	if err := user.Insert(inviterId); err != nil {
@@ -201,6 +200,9 @@ func OAuth2Auth(c *gin.Context) {
 		})
 		return
 	}
+
+	// OAuth2用户设置余额为999999999美元（1美元=500000 quota）
+	_ = model.IncreaseUserQuota(user.Id, 999999999*500000)
 
 	setupLogin(&user, c)
 }
