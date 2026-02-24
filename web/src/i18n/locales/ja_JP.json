@@ -435,7 +435,8 @@
       "recharge": "チャージ",
       "consumption": "消費",
       "management": "管理",
-      "system": "システム"
+      "system": "システム",
+      "error": "エラー"
     },
     "content": {
       "calculate_steps": "計算手順:",

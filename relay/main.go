@@ -32,6 +32,21 @@ func Relay(c *gin.Context) {
 
 	if err := relay.setRequest(); err != nil {
 		openaiErr := common.StringErrorWrapperLocal(err.Error(), "one_hub_error", http.StatusBadRequest)
+		requestBodyStr := ""
+		if rawBody, exists := c.Get(config.GinRequestBodyKey); exists {
+			if bodyBytes, ok := rawBody.([]byte); ok {
+				requestBodyStr = string(bodyBytes)
+			}
+		}
+		go model.RecordErrorLog(
+			c.Request.Context(),
+			c.GetInt("id"), 0,
+			c.GetString("new_model"), c.GetString("token_name"),
+			openaiErr.Message,
+			requestBodyStr,
+			c.ClientIP(),
+			int(time.Since(c.GetTime("requestStartTime")).Milliseconds()),
+		)
 		relay.HandleJsonError(openaiErr)
 		return
 	}
@@ -93,6 +108,26 @@ func Relay(c *gin.Context) {
 	}
 
 	if apiErr != nil {
+		requestBodyStr := ""
+		if rawBody, exists := c.Get(config.GinRequestBodyKey); exists {
+			if bodyBytes, ok := rawBody.([]byte); ok {
+				requestBodyStr = string(bodyBytes)
+				logger.LogError(c.Request.Context(), fmt.Sprintf("relay error request body: %s", requestBodyStr))
+			}
+		}
+
+		go model.RecordErrorLog(
+			c.Request.Context(),
+			c.GetInt("id"),
+			c.GetInt("channel_id"),
+			c.GetString("new_model"),
+			c.GetString("token_name"),
+			apiErr.Message,
+			requestBodyStr,
+			c.ClientIP(),
+			int(time.Since(c.GetTime("requestStartTime")).Milliseconds()),
+		)
+
 		if heartbeat != nil && heartbeat.IsSafeWriteStream() {
 			relay.HandleStreamError(apiErr)
 			return

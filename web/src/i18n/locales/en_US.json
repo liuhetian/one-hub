@@ -459,7 +459,8 @@
       "recharge": "Recharge",
       "consumption": "Consumption",
       "management": "Management",
-      "system": "System"
+      "system": "System",
+      "error": "Error"
     },
     "content": {
       "calculate_steps": "Calculation steps:",

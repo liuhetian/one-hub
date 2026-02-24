@@ -38,6 +38,7 @@ const (
 	LogTypeConsume
 	LogTypeManage
 	LogTypeSystem
+	LogTypeError
 )
 
 func RecordQuotaLog(userId int, logType int, quota int, ip string, content string) {
@@ -127,6 +128,49 @@ func RecordConsumeLog(
 		err := DB.Create(log).Error
 		if err != nil {
 			logger.LogError(ctx, "failed to record log: "+err.Error())
+		}
+	}
+}
+
+func RecordErrorLog(
+	ctx context.Context,
+	userId int,
+	channelId int,
+	modelName string,
+	tokenName string,
+	content string,
+	requestBody string,
+	sourceIp string,
+	requestTime int,
+) {
+	username, _ := CacheGetUsername(userId)
+
+	metadata := map[string]any{
+		"request_body": requestBody,
+	}
+
+	log := &Log{
+		UserId:           userId,
+		Username:         username,
+		CreatedAt:        utils.GetTimestamp(),
+		Type:             LogTypeError,
+		Content:          content,
+		ModelName:        modelName,
+		TokenName:        tokenName,
+		ChannelId:        channelId,
+		PromptTokens:     0,
+		CompletionTokens: 0,
+		RequestTime:      requestTime,
+		SourceIp:         sourceIp,
+		Metadata:         datatypes.NewJSONType(metadata),
+	}
+
+	if config.BatchUpdateEnabled {
+		AddLogToBatch(log)
+	} else {
+		err := DB.Create(log).Error
+		if err != nil {
+			logger.LogError(ctx, "failed to record error log: "+err.Error())
 		}
 	}
 }

@@ -180,6 +180,13 @@ func NewGroupManager(c *gin.Context) *GroupManager {
 
 // TryWithGroups 尝试使用主分组和备用分组
 func (gm *GroupManager) TryWithGroups(modelName string, filters []model.ChannelsFilterFunc, operation func(group string) (*model.Channel, error)) (*model.Channel, error) {
+	requestBodyStr := ""
+	if rawBody, exists := gm.context.Get(config.GinRequestBodyKey); exists {
+		if bodyBytes, ok := rawBody.([]byte); ok {
+			requestBodyStr = string(bodyBytes)
+		}
+	}
+
 	// 首先尝试主分组
 	if gm.primaryGroup != "" {
 		channel, err := gm.tryGroup(gm.primaryGroup, modelName, filters, operation)
@@ -187,6 +194,15 @@ func (gm *GroupManager) TryWithGroups(modelName string, filters []model.Channels
 			return channel, nil
 		}
 		logger.LogError(gm.context.Request.Context(), fmt.Sprintf("主分组 %s 失败 (模型 %s): %v", gm.primaryGroup, modelName, err))
+		go model.RecordErrorLog(
+			gm.context.Request.Context(),
+			gm.context.GetInt("id"), 0,
+			modelName, gm.context.GetString("token_name"),
+			fmt.Sprintf("主分组 %s 失败 (模型 %s): %v", gm.primaryGroup, modelName, err),
+			requestBodyStr,
+			gm.context.ClientIP(),
+			int(time.Since(gm.context.GetTime("requestStartTime")).Milliseconds()),
+		)
 	}
 
 	// 如果主分组失败，尝试备用分组
@@ -202,6 +218,15 @@ func (gm *GroupManager) TryWithGroups(modelName string, filters []model.Channels
 			return channel, nil
 		}
 		logger.LogError(gm.context.Request.Context(), fmt.Sprintf("备用分组 %s 也失败 (模型 %s): %v", gm.backupGroup, modelName, err))
+		go model.RecordErrorLog(
+			gm.context.Request.Context(),
+			gm.context.GetInt("id"), 0,
+			modelName, gm.context.GetString("token_name"),
+			fmt.Sprintf("备用分组 %s 也失败 (模型 %s): %v", gm.backupGroup, modelName, err),
+			requestBodyStr,
+			gm.context.ClientIP(),
+			int(time.Since(gm.context.GetTime("requestStartTime")).Milliseconds()),
+		)
 		return nil, gm.createGroupError(gm.backupGroup, modelName, channel)
 	}
 	return nil, gm.createGroupError(gm.primaryGroup, modelName, nil)

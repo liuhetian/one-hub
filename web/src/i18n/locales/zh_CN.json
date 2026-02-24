@@ -395,7 +395,8 @@
       "recharge": "充值",
       "consumption": "消费",
       "management": "管理",
-      "system": "系统"
+      "system": "系统",
+      "error": "错误"
     },
     "content": {
       "channel_group": "分组: {{ channel_group }}",
