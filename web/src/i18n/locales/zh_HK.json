@@ -440,7 +440,8 @@
       "recharge": "充值",
       "consumption": "消費",
       "management": "管理",
-      "system": "系統"
+      "system": "系統",
+      "error": "錯誤"
     },
     "content": {
       "calculate_steps": "計算步驟:",

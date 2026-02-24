@@ -7,6 +7,7 @@ import (
 	"one-api/common/utils"
 	"one-api/model"
 	"strings"
+	"time"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -126,6 +127,17 @@ func tokenAuth(c *gin.Context, key string) {
 	key = parts[0]
 	token, err := model.ValidateUserToken(key)
 	if err != nil {
+		if token != nil {
+			go model.RecordErrorLog(
+				c.Request.Context(),
+				token.UserId, 0,
+				"", token.Name,
+				err.Error(),
+				"",
+				c.ClientIP(),
+				int(time.Since(c.GetTime("requestStartTime")).Milliseconds()),
+			)
+		}
 		abortWithMessage(c, http.StatusUnauthorized, err.Error())
 		return
 	}

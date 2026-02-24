@@ -232,16 +232,16 @@ func ValidateUserToken(key string) (token *Token, err error) {
 	if token.Status != config.TokenStatusEnabled {
 		switch token.Status {
 		case config.TokenStatusExhausted:
-			return nil, ErrTokenQuotaExhausted
+			return token, ErrTokenQuotaExhausted
 		case config.TokenStatusExpired:
-			return nil, ErrTokenExpired
+			return token, ErrTokenExpired
 		default:
-			return nil, ErrTokenStatusUnavailable
+			return token, ErrTokenStatusUnavailable
 		}
 	}
 
 	if token.ExpiredTime != -1 && token.ExpiredTime < utils.GetTimestamp() {
-		return nil, ErrTokenExpired
+		return token, ErrTokenExpired
 	}
 
 	if !token.UnlimitedQuota {
@@ -254,7 +254,7 @@ func ValidateUserToken(key string) (token *Token, err error) {
 					logger.SysError("failed to update token status" + err.Error())
 				}
 			}
-			return nil, ErrTokenQuotaExhausted
+			return token, ErrTokenQuotaExhausted
 		}
 	}
 
