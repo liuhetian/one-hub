@@ -3,6 +3,7 @@ package middleware
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"one-api/common/config"
 	"one-api/common/utils"
 	"one-api/model"
@@ -193,6 +194,9 @@ func checkLimitIP(c *gin.Context) (error error) {
 	}
 	// 判断是否启用了ip限制
 	if !setting.Limits.LimitsIPSetting.Enabled {
+		if os.Getenv("FORCE_LIMIT_IP") != "" {
+			return fmt.Errorf("该令牌未启用 IP 白名单限制，拒绝访问")
+		}
 		return nil
 	}
 	// 未设置白名单
